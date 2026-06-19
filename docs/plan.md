@@ -43,7 +43,7 @@ The native-only capabilities are the other half of the "why an app, not a bookma
 
 ### 1.2 The shape of the destination
 
-Each messaging app converges on the same target: a **per-app structured data + event API** (list / read / send + an event stream for new-message / inbound-connect / mail) served by that app over the existing **app-gateway / RHPv2** path, consumed by a **native screen in pdn-mobile**. That contract — Section 5 — is the iteration target the whole product is organised around. The WebView shell carries everything until each app earns its native surface; the apps that get one (bpqchat, then pdn-bbs, then whatspac) graduate from iframe to native.
+Each messaging app converges on the same target: a **per-app structured data + event API** (list / read / send + an event stream for new-message / inbound-connect / mail) served by that app over HTTPS through the **app-gateway**, consumed by a **native screen in pdn-mobile**. That contract — Section 5 — is the iteration target the whole product is organised around. The WebView shell carries everything until each app earns its native surface; the apps that get one (bpqchat, then pdn-bbs, then whatspac) graduate from iframe to native.
 
 Push is part of the destination, not an afterthought: an OS notification that a station just connected or that mail arrived, deep-linking into the native thread, is one of the headline reasons the app exists. It lands **early-next** — right after the first native surface exists to deep-link into.
 
@@ -111,7 +111,7 @@ The pdn panel is loaded **remotely from the live node**, not bundled, so it stay
          reach paths (resolved by the registry, §2.3)        ▼
    pdn node:  LAN http://<ip>:8080  |  Tailscale https://<fqdn>.ts.net  |  public https://pdn.m0lte.uk
    pico-node: LAN http://pico-node.local  |  AP http://192.168.4.1  |  (later) BLE GATT
-   native messaging: Origin A → per-app mobile API over app-gateway/RHPv2 (§5)
+   native messaging: Origin A → per-app mobile API over the app-gateway (HTTPS) (§5)
    push (early-next): node → pdn-push-relay → APNs/FCM   (best-effort, degradable)
 ```
 
@@ -243,7 +243,9 @@ This is bootstrap reuse, not the product. Point the child WebView (Origin B) at 
 
 ## 5. The pdn app → mobile native contract (THE CORE ARC, design / iteration target)
 
-This is the spine of the product: a **per-app structured data + event API** that a messaging app serves over the existing app-gateway / RHPv2 path, and a **native screen in pdn-mobile** that consumes it. bpqchat, pdn-bbs, and whatspac each implement it. **This section is a design, not a frozen spec — it is the thing we iterate while building the first native surface (bpqchat). Expect the shapes to firm up as the first implementation lands.**
+This is the spine of the product: a **per-app structured data + event API** served by each messaging app **over HTTPS through the app-gateway**, consumed by a **native screen in pdn-mobile**. bpqchat, pdn-bbs, and whatspac each implement it. **This section is a design, not a frozen spec — it is the thing we iterate while building the first native surface (bpqchat). Expect the shapes to firm up as the first implementation lands.**
+
+**The phone never speaks RHPv2 — by design.** RHPv2 is the node's *internal packet plane*: a loopback/LAN-trusted, low-level JSON-over-TCP protocol between an app and the AX.25 engine (open/accept connections), with no remote-auth or TLS story. Pointing a remote phone at it would be the wrong shape — wrong trust boundary and the wrong abstraction level (the phone would be re-implementing app logic that already lives in bbs/chat/whatspac). Instead the phone is just another **authenticated HTTP client of the app-gateway**, exactly like the web UI — same `pdn_at` cookie / bearer token, same `X-Pdn-*` identity injection (§5.4). The apps keep using RHPv2 internally where they need the engine; whatspac's daemon (`whatspacd`) attaches over RHP and its mobile contract is bridged behind the gateway — but that bridge lives node-side and is invisible to the phone, which only ever sees plain JSON over HTTPS.
 
 ### 5.1 How an app declares a mobile surface (manifest)
 
