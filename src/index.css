@@ -186,6 +186,7 @@ a { color: inherit; text-decoration: none; }
 .input::placeholder { color: var(--text-tertiary); }
 .input:focus { outline: none; border-color: var(--signal); box-shadow: 0 0 0 3px var(--signal-wash); }
 .input--mono { font-family: var(--font-mono); }
+.form-error { color: var(--transmit); font-size: var(--t-body); margin-bottom: var(--s4); }
 
 /* ===== states ===== */
 .state { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--s3); padding: var(--s10) var(--s4); color: var(--muted); }

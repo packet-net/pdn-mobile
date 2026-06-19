@@ -28,6 +28,13 @@ const config: CapacitorConfig = {
     iosScheme: 'https',
     androidScheme: 'https',
   },
+  plugins: {
+    // Native HTTP (probing + auth) bypasses WebView CORS/mixed-content; CapacitorCookies
+    // shares the node's HttpOnly gateway cookie (set by the native /auth/login + refresh)
+    // with the child WebView that loads the node's same-origin panel. See src/auth/login.ts.
+    CapacitorHttp: { enabled: true },
+    CapacitorCookies: { enabled: true },
+  },
 };
 
 export default config;
