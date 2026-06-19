@@ -1,0 +1,124 @@
+# Codemagic CI/CD — iOS build + TestFlight for the pdn mobile app.
+#
+# WHY CODEMAGIC: Tom has NO Mac. The native iOS build needs macOS + Xcode, and
+# code signing for TestFlight needs an Apple signing identity. Codemagic's free
+# tier gives a macOS (M2) runner AND can auto-sign with an App Store Connect API
+# key — so the whole "build a signed IPA and push to TestFlight" loop happens in
+# the cloud with no Mac and no manual certificate juggling. Install builds on the
+# iPhone via the TestFlight app. (The DIY alternative is GitHub-hosted macOS
+# runners + fastlane; this file is the recommended Codemagic default.)
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# BEFORE THE FIRST RUN — Tom must wire these up in the Codemagic UI / Apple side:
+#
+#  1. Apple Developer Program membership (INDIVIDUAL, $99/yr) — required even for
+#     TestFlight. (plan §P-1)
+#  2. Create the App ID / bundle identifier `uk.m0lte.pdn` in App Store Connect,
+#     and create the app record there (name "pdn").
+#  3. Create an App Store Connect API key (Users and Access → Integrations → Keys):
+#     download the .p8, note the Key ID and Issuer ID.
+#  4. In Codemagic: Teams → Integrations → Developer Portal → add that API key.
+#     Give the integration a NAME and put that name in `APP_STORE_CONNECT_KEY`
+#     below (the value `codemagic` is the conventional default integration name —
+#     CHANGE IT to whatever Tom names his).
+#  5. In Codemagic: connect this repo (packet-net/pdn-mobile) and pick this
+#     `ios-testflight` workflow.
+#
+# Everything marked  <<< FILL IN >>>  below is a placeholder Tom must set.
+# ─────────────────────────────────────────────────────────────────────────────
+
+workflows:
+  ios-testflight:
+    name: pdn iOS → TestFlight
+    # Free tier = macOS M2. Bump to a paid instance type later if builds need it.
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    environment:
+      # Node for the web layer (Vite build). Match your local toolchain.
+      node: 22
+
+      vars:
+        # The bundle id — LOCKED. Must match capacitor.config.ts `appId` AND the
+        # App ID you registered in App Store Connect.
+        BUNDLE_ID: 'uk.m0lte.pdn'
+        # The Xcode scheme Capacitor generates for the iOS app. After `cap add ios`
+        # the scheme is named "App" by default — leave as-is unless you rename it.
+        XCODE_SCHEME: 'App'
+        XCODE_WORKSPACE: 'ios/App/App.xcworkspace'
+
+      # App Store Connect API key integration (set up in step 4 above).
+      # The name here MUST match the integration name in the Codemagic UI.
+      integrations:
+        app_store_connect: codemagic # <<< FILL IN: your integration name
+
+      # ios_signing tells Codemagic to fetch/auto-manage the signing certificate +
+      # provisioning profile via the App Store Connect API key — NO Mac, NO manual
+      # certs. Codemagic will create a managed profile for BUNDLE_ID on first run.
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: uk.m0lte.pdn # <<< keep in sync with BUNDLE_ID
+
+    # Build the web layer on Linux-equivalent steps, then generate + build iOS.
+    scripts:
+      - name: Install web dependencies
+        script: |
+          npm ci
+
+      - name: Build the web layer (Vite)
+        script: |
+          npm run build
+
+      - name: Generate the iOS native project (cap add ios) + sync
+        # ios/ is .gitignored and NOT in the repo — it is generated fresh here.
+        # `cap add ios` is idempotent-ish but guard for re-runs / cached clones.
+        script: |
+          if [ ! -d "ios" ]; then
+            npx cap add ios
+          fi
+          npx cap sync ios
+
+      - name: Set up code signing (App Store Connect API key)
+        # Pulls/creates the distribution cert + provisioning profile via the API
+        # key, then applies them to the Xcode project. No Mac/keychain wrangling.
+        script: |
+          xcode-project use-profiles
+
+      - name: Increment build number from TestFlight
+        # Auto-bump CFBundleVersion to the latest TestFlight build + 1 so each
+        # upload is unique. (Marketing version / CFBundleShortVersionString stays
+        # whatever your project sets.)
+        script: |
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number "$BUNDLE_ID" 2>/dev/null || echo "0")
+          cd ios/App
+          agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
+
+      - name: Build + auto-sign the IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - ios/App/build/**/*.dSYM
+
+    publishing:
+      # Publish the signed build to TestFlight. Uses the same App Store Connect
+      # API key integration. Internal testers get it immediately; external testers
+      # require Apple's (usually quick) beta review on first external submission.
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # Optional: auto-distribute to named internal/external tester groups.
+        # beta_groups:
+        #   - 'pdn internal'   # <<< FILL IN: create the group in App Store Connect
+
+      # Optional: get an email when the build lands in TestFlight.
+      # email:
+      #   recipients:
+      #     - tom@fann.ing   # <<< FILL IN if you want notifications
+      #   notify:
+      #     success: true
+      #     failure: true
