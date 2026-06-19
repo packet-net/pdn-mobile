@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import type { NodeRecord } from '../registry/types';
+import { nodeFromInput } from '../registry/manualAdd';
 import { IconScan } from '../components/Icons';
 
 /**
@@ -9,9 +11,15 @@ import { IconScan } from '../components/Icons';
  *   - manual add by address: ALWAYS available, so a permission denial is never a
  *     dead end. The floor that always works.
  */
-export function AddNode({ onCancel }: { onCancel: () => void }) {
+export function AddNode({
+  onCancel,
+  onAdd,
+}: {
+  onCancel: () => void;
+  onAdd: (node: NodeRecord) => void;
+}) {
   const [address, setAddress] = useState('');
-  const canAdd = address.trim().length > 0;
+  const parsed = nodeFromInput(address);
 
   return (
     <div className="screen">
@@ -37,7 +45,7 @@ export function AddNode({ onCancel }: { onCancel: () => void }) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          /* P1: resolve, probe, mint credRef, persist. */
+          if (parsed) onAdd(parsed);
         }}
       >
         <label className="field">
@@ -55,7 +63,7 @@ export function AddNode({ onCancel }: { onCancel: () => void }) {
           />
         </label>
 
-        <button type="submit" className="btn btn--primary btn--block" disabled={!canAdd}>
+        <button type="submit" className="btn btn--primary btn--block" disabled={!parsed}>
           Add node
         </button>
         <button type="button" className="btn btn--ghost btn--block" onClick={onCancel}>
