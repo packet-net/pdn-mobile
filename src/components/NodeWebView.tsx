@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import type { NodeRecord } from '../registry/types';
 import { primaryReach } from '../registry/status';
+import { refreshSession } from '../auth/login';
 
 /**
  * NodeWebView — the child-WebView host ("Origin B", plan §2.1 / §2.2). The pdn
@@ -28,17 +30,29 @@ export function NodeWebView({ node }: { node: NodeRecord }) {
   const [phase, setPhase] = useState<Phase>(reachable ? 'connecting' : 'error');
   const [attempt, setAttempt] = useState(0);
 
-  // Simulated connect — re-runs on retry via the attempt counter (so "Try again"
-  // actually re-attempts instead of spinning forever). Real load events land in P1.
+  // Connect — re-runs on retry via the attempt counter (so "Try again" actually
+  // re-attempts instead of spinning forever). On native, best-effort mint the gateway
+  // cookie from the stored refresh token so the same-origin panel WebView is already
+  // authenticated (CapacitorCookies shares it). The body is still a placeholder — the
+  // native child WebView itself is a later piece — so the linked phase is simulated.
   useEffect(() => {
     if (!reachable) {
       setPhase('error');
       return;
     }
     setPhase('connecting');
-    const t = setTimeout(() => setPhase('linked'), 700);
-    return () => clearTimeout(t);
-  }, [reachable, attempt]);
+    let cancelled = false;
+    // Fire-and-forget and intentionally NOT gated by `cancelled`: a rotated refresh token
+    // must persist to the Keychain even if the user navigates away mid-refresh.
+    if (Capacitor.isNativePlatform() && reach) void refreshSession(reach, node.credRef);
+    const t = setTimeout(() => {
+      if (!cancelled) setPhase('linked');
+    }, 700);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [reachable, attempt, reach?.baseUrl, node.credRef]);
 
   return (
     <div className="wv">

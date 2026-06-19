@@ -37,7 +37,10 @@ function initialRoute(): { tab: Tab; route: NodesRoute } {
   const hash = window.location.hash.replace(/^#/, '');
   if (hash === 'settings') return { tab: 'settings', route: { name: 'roster' } };
   if (hash === 'add') return { tab: 'nodes', route: { name: 'add' } };
-  const [name, id] = hash.split(':');
+  // Split on the FIRST colon only — node ids are origins (http://host:port) and contain colons.
+  const sep = hash.indexOf(':');
+  const name = sep === -1 ? hash : hash.slice(0, sep);
+  const id = sep === -1 ? '' : hash.slice(sep + 1);
   if (id && (name === 'login' || name === 'webview')) {
     return { tab: 'nodes', route: { name, id } };
   }
