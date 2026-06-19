@@ -1,60 +1,67 @@
-import { useState } from 'react';
 import type { NodeRecord } from '../registry/types';
-import { sampleNodes } from '../registry/sampleNodes';
-import { AddNode } from '../components/AddNode';
-import { NodeWebView } from '../components/NodeWebView';
+import { nodeStatus } from '../registry/status';
+import { NodeRow } from '../components/NodeRow';
+import { IconNodes } from '../components/Icons';
 
 /**
- * Home — the multi-node registry screen (plan §2.3, Origin A / native shell).
- *
- * P0 skeleton: lists the registry's NodeRecords (type pdn|pico, reach lan|tailscale|
- * ap), an "Add node" stub, and lets you select a node to reveal the child-WebView
- * placeholder. This is the app's own native chrome — the only surface with bridge
- * access. Selecting a node is where reach-resolution (lan → tailscale → ap → ble)
- * will run in P1 before handing the resolved origin to the child WebView.
+ * Home — the node roster. THE HERO of the app: an operator's monitored stations
+ * read as a band of signals, strongest health first is not imposed (registry order
+ * is the operator's own), but each row leads with its meter. This is Origin A (the
+ * native shell); selecting a node is where reach-resolution runs before handing the
+ * resolved origin to the child WebView.
  */
-export function Home() {
-  const [nodes] = useState<NodeRecord[]>(sampleNodes);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+export function Home({
+  nodes,
+  activeId,
+  onSelect,
+  onAdd,
+}: {
+  nodes: NodeRecord[];
+  activeId?: string | null;
+  onSelect: (node: NodeRecord) => void;
+  onAdd: () => void;
+}) {
+  if (nodes.length === 0) {
+    return (
+      <div className="state">
+        <span className="state__glyph">
+          <IconNodes width={40} height={40} />
+        </span>
+        <p className="state__title">No nodes yet</p>
+        <p>Add a pdn or pico node to monitor and manage it from here.</p>
+        <button type="button" className="btn btn--primary" onClick={onAdd}>
+          Add your first node
+        </button>
+      </div>
+    );
+  }
 
-  const selected = nodes.find((n) => n.id === selectedId) ?? null;
+  const online = nodes.filter((n) => nodeStatus(n).reachable).length;
+  const offline = nodes.length - online;
 
   return (
-    <div className="home">
-      <header className="home-header">
-        <h1>pdn</h1>
-        <p className="muted">native messaging surfaces, bootstrapped on the node-WebView shell — skeleton (P0)</p>
+    <div className="screen">
+      <header className="screen__head">
+        <p className="eyebrow">Nodes</p>
+        <p className="roster-status">
+          <span className="roster-status__n up">{online}</span>
+          <span className="roster-status__l">online</span>
+          {offline > 0 && (
+            <>
+              <span className="roster-status__n down">{offline}</span>
+              <span className="roster-status__l">offline</span>
+            </>
+          )}
+        </p>
       </header>
 
-      <section className="node-list" aria-label="Nodes">
-        {nodes.map((node) => {
-          const reaches = node.reaches.map((r) => r.kind).join(' · ');
-          return (
-            <button
-              key={node.id}
-              type="button"
-              className={
-                'node-row' + (node.id === selectedId ? ' node-row--selected' : '')
-              }
-              onClick={() => setSelectedId(node.id)}
-            >
-              <span className={'node-badge node-badge--' + node.type}>{node.type}</span>
-              <span className="node-name">{node.displayName}</span>
-              <span className="node-reach muted">{reaches}</span>
-            </button>
-          );
-        })}
-      </section>
-
-      <AddNode />
-
-      <section className="node-detail">
-        {selected ? (
-          <NodeWebView node={selected} />
-        ) : (
-          <p className="muted">Select a node to open its panel (child WebView).</p>
-        )}
-      </section>
+      <div className="roster" role="list" aria-label="Nodes">
+        {nodes.map((node) => (
+          <div role="listitem" key={node.id}>
+            <NodeRow node={node} live={node.id === activeId} onSelect={onSelect} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
