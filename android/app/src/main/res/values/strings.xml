@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">pdn</string>
+    <string name="title_activity_main">pdn</string>
+    <string name="package_name">uk.m0lte.pdn</string>
+    <string name="custom_url_scheme">uk.m0lte.pdn</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Cleartext (http) is permitted app-wide because pdn LAN nodes are HTTP-only BY DESIGN: the
+  gateway / Tailscale / public-domain paths are HTTPS, but LAN and soft-AP reaches are plain
+  http (docs/plan.md §2.4), and CapacitorHttp (the probe + auth transport) is native OkHttp,
+  which honours this policy. Android has no RFC1918/CIDR matcher in network-security-config
+  (unlike iOS NSAllowsLocalNetworking, which auto-scopes to RFC1918 + .local), and the app
+  supports IP-literal LAN nodes (manual add by IP), so a domain allow-list can't cover them —
+  hence app-wide cleartext. The app only ever connects to operator-configured node addresses.
+  HARDENING (plan §12): scope this to a discovered-node allow-list once mDNS discovery lands.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

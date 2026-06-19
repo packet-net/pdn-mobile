@@ -1,0 +1,55 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  web:
+    name: web (typecheck + tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run build # tsc -b (typecheck) + vite build
+      - run: npm test # vitest (reducer + parsing units)
+
+  android:
+    name: android (debug APK)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run build # the web layer (dist/) that Capacitor copies in
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21' # Capacitor 7's android library compiles at Java 21
+      - uses: android-actions/setup-android@v3
+      - name: Install SDK packages (compileSdk 35)
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+
+      - run: npx cap sync android # refresh web assets + plugin registrations onto the committed project
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pdn-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
