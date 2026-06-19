@@ -5,11 +5,12 @@ node_modules/
 dist/
 *.local
 
-# Native platform folders — generated in CI (Codemagic, macOS) via `cap add`,
-# NOT checked in. They need a Mac/Xcode/Android SDK and are reproducible from
-# capacitor.config.ts + the web build. Do not commit them.
+# iOS — generated in CI (Codemagic, macOS) via `cap add ios`, NOT checked in: it
+# needs a Mac/Xcode and is reproducible from capacitor.config.ts + the web build.
 ios/
-android/
+# Android IS committed (it builds on Linux in hosted CI, no Mac) so its tracked native
+# config — the cleartext network-security-config, the manifest — is reviewable + stable.
+# Build outputs (build/, .gradle/, *.apk, local.properties) are excluded by android/.gitignore.
 
 # Editor / OS cruft
 .vscode/*
