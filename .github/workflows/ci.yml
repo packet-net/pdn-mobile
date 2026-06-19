@@ -35,7 +35,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21' # Capacitor 7's android library compiles at Java 21
       - uses: android-actions/setup-android@v3
       - name: Install SDK packages (compileSdk 35)
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
