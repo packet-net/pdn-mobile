@@ -96,6 +96,7 @@ export function IconScan(props: IconProps) {
   );
 }
 
+/** Key — reserved for the deferred passkey login path (not yet wired). */
 export function IconKey(props: IconProps) {
   return (
     <Svg {...props}>

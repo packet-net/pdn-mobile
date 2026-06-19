@@ -4,6 +4,7 @@ import '@fontsource-variable/saira';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/600.css';
 import App from './App';
+import { RegistryProvider } from './registry/RegistryContext';
 import './index.css';
 
 const rootEl = document.getElementById('root');
@@ -13,6 +14,8 @@ if (!rootEl) {
 
 createRoot(rootEl).render(
   <StrictMode>
-    <App />
+    <RegistryProvider>
+      <App />
+    </RegistryProvider>
   </StrictMode>,
 );
