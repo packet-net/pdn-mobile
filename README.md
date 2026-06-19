@@ -2,7 +2,7 @@
 
 **Native mobile UIs for the [packet.net](https://github.com/packet-net) messaging apps — BBS (mail), chat (bpqchat), and WhatsPac — on an iPhone**, with push notifications and native-only capabilities (LAN mDNS discovery, secure multi-node credential storage + instant switching, later direct pico-radio management) that a browser bookmark can never deliver. Those native messaging surfaces — each backed by a structured per-app data + event API over the app-gateway / RHPv2 — are the product. A Capacitor 7 + React + TypeScript app delivers them.
 
-The bootstrap (the first shippable thing) reuses each node's existing React control panel inside a sandboxed child WebView served from the node's own origin (zero pdn web changes for the happy path), giving an operator a working pocket console immediately while the chassis (auth, discovery, multi-node registry, the Codemagic→TestFlight pipeline) is proven. That WebView shell is the **floor, not the product** — the native messaging surfaces grow out of it and replace it app by app. The full architecture, phasing, and locked decisions live in the plan: [`../packet.net/docs/mobile-app-plan.md`](../packet.net/docs/mobile-app-plan.md).
+The bootstrap (the first shippable thing) reuses each node's existing React control panel inside a sandboxed child WebView served from the node's own origin (zero pdn web changes for the happy path), giving an operator a working pocket console immediately while the chassis (auth, discovery, multi-node registry, the Codemagic→TestFlight pipeline) is proven. That WebView shell is the **floor, not the product** — the native messaging surfaces grow out of it and replace it app by app. The full architecture, phasing, and locked decisions live in the plan: [`docs/plan.md`](docs/plan.md).
 
 This repo is currently a **skeleton** (P0): a Home/node-registry screen, an "Add node" stub, and a child-WebView component stub — just enough to render and build. The clearly-marked stubs are placeholders for the P0/P1 work in the plan, not finished features.
 
@@ -55,4 +55,4 @@ src/
 
 ## Status / roadmap
 
-See [`../packet.net/docs/mobile-app-plan.md`](../packet.net/docs/mobile-app-plan.md) §9 for the phased roadmap. This skeleton corresponds to the start of **P0** ("pdn panel in your pocket"). Android is a designed-for fast-follow (plan §12); contracts stay platform-neutral.
+See [`docs/plan.md`](docs/plan.md) §9 for the phased roadmap. This skeleton corresponds to the start of **P0** ("pdn panel in your pocket"). Android is a designed-for fast-follow (plan §12); contracts stay platform-neutral.
