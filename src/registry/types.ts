@@ -33,6 +33,12 @@ export interface NodeRecord {
   id: string;
   type: NodeType;
   displayName: string;
+  /**
+   * The node's amateur callsign(-SSID) — the "wire" identity, rendered in mono.
+   * Optional: a freshly-added LAN node may be known only by host before first
+   * handshake. SAMPLE DATA uses synthetic Q0-block placeholders, never real calls.
+   */
+  callsign?: string;
   /** Ordered by preference; probed in order at reach-resolution time. */
   reaches: NodeReach[];
   /**

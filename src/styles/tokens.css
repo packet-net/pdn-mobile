@@ -1,0 +1,119 @@
+/*
+ * pdn-mobile design tokens — "a precision instrument tuned to your stations."
+ *
+ * The visual language for the whole app; the native messaging surfaces (chat / BBS /
+ * WhatsPac) inherit these. Grounded in the operator's world: navy-slate equipment
+ * housing, an amber dial-light primary, a teal "linked/carrier" signal, transmit-red
+ * for on-air/critical. Body type is system-ui (real SF Pro on iOS — genuinely native);
+ * Saira is the condensed technical display/label face (equipment silkscreen); IBM Plex
+ * Mono carries callsigns/grids/IDs — the "wire" identity, true to packet radio.
+ *
+ * Dark is the lead (night-bench, premium); light is a clean daytime variant. A manual
+ * [data-theme] override wins over the OS preference.
+ */
+
+:root {
+  /* ---- Type families ---- */
+  --font-display: 'Saira Variable', system-ui, sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* ---- Type scale (mobile-first) ---- */
+  --t-eyebrow: 0.6875rem;  /* 11px — tracked uppercase Saira labels */
+  --t-meta: 0.75rem;       /* 12px — captions, pill text */
+  --t-body: 0.9375rem;     /* 15px — iOS body */
+  --t-row: 1rem;           /* 16px — list row primary */
+  --t-title: 1.125rem;     /* 18px — card / section titles */
+  --t-screen: 1.5rem;      /* 24px — screen titles (Saira) */
+  --t-display: 2rem;       /* 32px — rare hero numerals */
+  --lh-tight: 1.15;
+  --lh-body: 1.45;
+  --track-eyebrow: 0.12em;
+  --track-mono: -0.01em;
+
+  /* ---- Spacing (4px base) ---- */
+  --s1: 0.25rem; --s2: 0.5rem; --s3: 0.75rem; --s4: 1rem;
+  --s5: 1.25rem; --s6: 1.5rem; --s8: 2rem; --s10: 2.5rem; --s12: 3rem;
+
+  /* ---- Radius ---- */
+  --r-sm: 8px; --r: 13px; --r-lg: 18px; --r-pill: 999px;
+
+  /* ---- Motion ---- */
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);   /* iOS-ish spring-out */
+  --dur-fast: 120ms; --dur: 200ms; --dur-slow: 420ms;
+
+  /* ---- Dark palette (the lead) ---- */
+  --ink: #0E1419;          /* app background — deep blue-charcoal housing */
+  --ink-2: #0A0F13;        /* deepest (tab bar / under-content) */
+  --panel: #151D26;        /* cards / surfaces */
+  --panel-2: #1B2530;      /* raised: inputs, pressed, headers */
+  --line: #25303D;         /* hairline borders */
+  --line-strong: #34424F;  /* emphasised dividers */
+
+  --text: #E8EBEE;         /* primary */
+  --muted: #8A97A6;        /* secondary (≥4.5:1 body) */
+  --text-tertiary: #828E9C;/* tertiary TEXT — still ≥4.5:1 on panels (placeholders, status) */
+  --faint: #586473;        /* decorative / disabled only — NOT for readable text */
+
+  --signal: #F4B23E;       /* amber dial-light — primary accent */
+  --signal-press: #E0A02E;
+  --signal-wash: rgba(244, 178, 62, 0.14);   /* tinted backgrounds */
+  --link: #45C2C8;         /* teal — connected / carrier / reachable */
+  --link-wash: rgba(69, 194, 200, 0.13);
+  --transmit: #E5544B;     /* red — on-air / error / critical */
+  --transmit-wash: rgba(229, 84, 75, 0.13);
+
+  --on-signal: #11161B;    /* text on amber */
+  --on-link: #08221f;      /* text on teal — reserved for a future linked-primary affordance (messaging surfaces); no consumer yet */
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 8px 24px -8px rgba(0, 0, 0, 0.55);
+
+  color-scheme: dark;
+}
+
+/* LIGHT PALETTE (OS-auto) — keep in sync with the [data-theme='light'] block below.
+   Any value change MUST be applied in BOTH or dark/light/auto silently diverge. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --ink: #EEF1F4;        /* cool paper (deliberately not cream) */
+    --ink-2: #E4E9EE;
+    --panel: #FFFFFF;
+    --panel-2: #F3F6F9;
+    --line: #DCE3EA;
+    --line-strong: #C4CFD9;
+
+    --text: #14202B;       /* navy ink */
+    --muted: #5A6675;
+    --text-tertiary: #647080;/* tertiary TEXT — ≥4.5:1 on light panels */
+    --faint: #8492A1;      /* decorative / disabled only */
+
+    --signal: #8C5E0F;     /* deepened amber — ≥4.5:1 as text on every light surface incl. the tab bar */
+    --signal-press: #7A5210;
+    --signal-wash: rgba(140, 94, 15, 0.12);
+    --link: #128A90;
+    --link-wash: rgba(18, 138, 144, 0.10);
+    --transmit: #C8392F;
+    --transmit-wash: rgba(200, 57, 47, 0.10);
+    --on-signal: #1A1206;  /* near-black on amber — robust for 12px Saira labels */
+    --on-link: #ffffff;
+
+    --shadow-1: 0 1px 2px rgba(20, 32, 43, 0.08);
+    --shadow-2: 0 10px 28px -10px rgba(20, 32, 43, 0.22);
+    color-scheme: light;
+  }
+}
+
+/* LIGHT PALETTE (manual override) — keep in sync with the @media block above. */
+[data-theme='light'] {
+  --ink: #EEF1F4; --ink-2: #E4E9EE; --panel: #FFFFFF; --panel-2: #F3F6F9;
+  --line: #DCE3EA; --line-strong: #C4CFD9;
+  --text: #14202B; --muted: #5A6675; --text-tertiary: #647080; --faint: #8492A1;
+  --signal: #8C5E0F; --signal-press: #7A5210; --signal-wash: rgba(140, 94, 15, 0.12);
+  --link: #128A90; --link-wash: rgba(18, 138, 144, 0.10);
+  --transmit: #C8392F; --transmit-wash: rgba(200, 57, 47, 0.10);
+  --on-signal: #1A1206; --on-link: #ffffff;
+  --shadow-1: 0 1px 2px rgba(20, 32, 43, 0.08);
+  --shadow-2: 0 10px 28px -10px rgba(20, 32, 43, 0.22);
+  color-scheme: light;
+}
