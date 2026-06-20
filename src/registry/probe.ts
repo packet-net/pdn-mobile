@@ -1,5 +1,5 @@
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
-import type { NodeReach, NodeType } from './types';
+import type { NodeRecord, NodeReach, NodeType, Reach } from './types';
 
 /**
  * Liveness + RTT probe for a single reach. Uses CapacitorHttp (NATIVE http) — never
@@ -58,4 +58,20 @@ export function reachPatch(result: ProbeResult): Partial<NodeReach> | null {
   if (result.reachable === undefined) return null;
   if (result.reachable) return { lastSeenAt: Date.now(), rttMs: result.rttMs };
   return { lastSeenAt: undefined, rttMs: undefined };
+}
+
+/**
+ * Probe every reach of a node and patch the results. Shared by the initial background
+ * sweep (useRegistryProbe) and the node-detail screen's manual "check reachability".
+ */
+export async function probeNode(
+  node: NodeRecord,
+  patch: (id: string, kind: Reach, p: Partial<NodeReach>) => void,
+): Promise<void> {
+  await Promise.all(
+    node.reaches.map(async (reach) => {
+      const rp = reachPatch(await probe(reach, node.type));
+      if (rp) patch(node.id, reach.kind, rp);
+    }),
+  );
 }
